@@ -86,11 +86,3 @@ require("babel").setup({
 	target = "zh",
 	provider = "google",
 })
-
-vim.keymap.set("v", "<leader>tr", function()
-	require("babel").translate_selection()
-end, { desc = "翻译选中的文本" })
-
-vim.keymap.set("n", "<leader>tw", function()
-	require("babel").translate_word()
-end, { desc = "翻译光标下的单词" })

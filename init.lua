@@ -367,16 +367,8 @@ do
 	--
 	-- See `:help gitsigns` to understand what each configuration key does.
 	-- Adds git related signs to the gutter, as well as utilities for managing changes
+	-- NOTE: gitsigns setup is in kickstart/plugins/gitsigns.lua (with keymaps)
 	vim.pack.add({ gh("lewis6991/gitsigns.nvim") })
-	require("gitsigns").setup({
-		signs = {
-			add = { text = "+" }, ---@diagnostic disable-line: missing-fields
-			change = { text = "~" }, ---@diagnostic disable-line: missing-fields
-			delete = { text = "_" }, ---@diagnostic disable-line: missing-fields
-			topdelete = { text = "‾" }, ---@diagnostic disable-line: missing-fields
-			changedelete = { text = "~" }, ---@diagnostic disable-line: missing-fields
-		},
-	})
 
 	-- Useful plugin to show you pending keybinds.
 	vim.pack.add({ gh("folke/which-key.nvim") })
@@ -387,8 +379,9 @@ do
 		-- Document existing key chains
 		spec = {
 			{ "<leader>s", group = "[S]earch", mode = { "n", "v" } },
-			{ "<leader>t", group = "[T]oggle" },
+			{ "<leader>t", group = "[T]ranslate / Toggle" },
 			{ "<leader>h", group = "Git [H]unk", mode = { "n", "v" } }, -- Enable gitsigns recommended keymaps first
+			{ "<leader>b", group = "[B]uffer" },
 			{ "ga", group = "LSP Actions", mode = { "n" } },
 		},
 	})
@@ -521,7 +514,7 @@ do
 	})
 
 	-- Enable Telescope extensions if they are installed
-	pcall(require("telescope").load_extension, "fzf-native")
+	pcall(require("telescope").load_extension, "fzf")
 	pcall(require("telescope").load_extension, "ui-select")
 
 	-- See `:help telescope.builtin`
@@ -710,8 +703,7 @@ do
 	--  Feel free to add/remove any LSPs that you want here. They will automatically be installed.
 	--  See `:help lsp-config` for information about keys and how to configure
 	---@type table<string, vim.lsp.Config>
-	local servers =
-		{
+	local servers = {
 			-- clangd = {},
 			-- gopls = {},
 			basedpyright = {
@@ -788,12 +780,14 @@ do
 					},
 				},
 			},
-		}, vim.pack.add({
-			gh("neovim/nvim-lspconfig"),
-			gh("mason-org/mason.nvim"),
-			gh("mason-org/mason-lspconfig.nvim"),
-			gh("WhoIsSethDaniel/mason-tool-installer.nvim"),
-		})
+		}
+
+	vim.pack.add({
+		gh("neovim/nvim-lspconfig"),
+		gh("mason-org/mason.nvim"),
+		gh("mason-org/mason-lspconfig.nvim"),
+		gh("WhoIsSethDaniel/mason-tool-installer.nvim"),
+	})
 
 	-- Automatically install LSPs and related tools to stdpath for Neovim
 	require("mason").setup({})

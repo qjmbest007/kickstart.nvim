@@ -27,5 +27,5 @@ vim.keymap.set("n", "<leader>bo", "<cmd>BufferLineCloseOthers<CR>", { desc = "�
 vim.keymap.set("n", "<leader>bn", ":bnext<CR>", { desc = "下一个buffer" })
 vim.keymap.set("n", "<leader>bp", ":bprevious<CR>", { desc = "上一个buffer" })
 
-vim.keymap.set("n", "<leader>bs", ":bprevious<CR>", { desc = "选择一个buffer" })
-vim.keymap.set("n", "<leader>bg", ":BufferLinePick<CR>", { desc = "选择挑战buffer" })
+vim.keymap.set("n", "<leader>bs", "<cmd>BufferLinePick<CR>", { desc = "选择一个buffer" })
+vim.keymap.set("n", "<leader>bg", "<cmd>BufferLinePickClose<CR>", { desc = "选择关闭buffer" })
