@@ -704,83 +704,86 @@ do
 	--  See `:help lsp-config` for information about keys and how to configure
 	---@type table<string, vim.lsp.Config>
 	local servers = {
-			-- clangd = {},
-			-- gopls = {},
-			basedpyright = {
+		-- clangd = {},
+		-- gopls = {},
+		basedpyright = {
+			settings = {
+				basedpyright = {
+					analysis = {
+						typeCheckingMode = "basic",
+						diagnosticSeverityOverrides = {
+							reportMissingTypeStubs = "none",
+							reportArgumentType = "none",
+						},
+					},
+				},
+			},
+		},
+		ruff = {
+			on_init = function(client)
+				-- 禁用 hover 和格式化（由 basedpyright 和 conform 负责）
+				client.server_capabilities.hoverProvider = false
+				client.server_capabilities.documentFormattingProvider = false
+				client.server_capabilities.documentRangeFormattingProvider = false
+			end,
+			init_options = {
 				settings = {
-					basedpyright = {
-						analysis = {
-							typeCheckingMode = "basic",
-							diagnosticSeverityOverrides = {
-								reportMissingTypeStubs = "none",
-								reportArgumentType = "none",
-							},
-						},
+					lint = {
+						select = { "E", "F", "W", "I" },
+						ignore = { "F821" },
 					},
 				},
 			},
-			ruff = {
-				on_init = function(client)
-					-- 禁用 hover 和格式化（由 basedpyright 和 conform 负责）
-					client.server_capabilities.hoverProvider = false
-					client.server_capabilities.documentFormattingProvider = false
-					client.server_capabilities.documentRangeFormattingProvider = false
-				end,
-				init_options = {
-					settings = {
-						lint = {
-							select = { "E", "F", "W", "I" },
-							ignore = { "F821" },
-						},
-					},
-				},
-			},
-			-- rust_analyzer = {},
-			--
-			-- Some languages (like typescript) have entire language plugins that can be useful:
-			--    https://github.com/pmizio/typescript-tools.nvim
-			--
-			-- But for many setups, the LSP (`ts_ls`) will work just fine
-			-- ts_ls = {},
+		},
+		-- rust_analyzer = {},
+		--
+		-- Some languages (like typescript) have entire language plugins that can be useful:
+		--    https://github.com/pmizio/typescript-tools.nvim
+		--
+		-- But for many setups, the LSP (`ts_ls`) will work just fine
+		-- ts_ls = {},
 
-			stylua = {}, -- Used to format Lua code
+		stylua = {}, -- Used to format Lua code
 
-			-- Special Lua Config, as recommended by neovim help docs
-			lua_ls = {
-				on_init = function(client)
-					client.server_capabilities.documentFormattingProvider = false -- Disable formatting (formatting is done by stylua)
+		-- Special Lua Config, as recommended by neovim help docs
+		lua_ls = {
+			on_init = function(client)
+				client.server_capabilities.documentFormattingProvider = false -- Disable formatting (formatting is done by stylua)
 
-					if client.workspace_folders then
-						local path = client.workspace_folders[1].name
-						if path ~= vim.fn.stdpath("config") and (vim.uv.fs_stat(path .. "/.luarc.json") or vim.uv.fs_stat(path .. "/.luarc.jsonc")) then
-							return
-						end
+				if client.workspace_folders then
+					local path = client.workspace_folders[1].name
+					if
+						path ~= vim.fn.stdpath("config")
+						and (vim.uv.fs_stat(path .. "/.luarc.json") or vim.uv.fs_stat(path .. "/.luarc.jsonc"))
+					then
+						return
 					end
+				end
 
-					client.config.settings.Lua = vim.tbl_deep_extend("force", client.config.settings.Lua, {
-						runtime = {
-							version = "LuaJIT",
-							path = { "lua/?.lua", "lua/?/" },
-						},
-						workspace = {
-							checkThirdParty = false,
-							-- NOTE: this is a lot slower and will cause issues when working on your own configuration.
-							--  See https://github.com/neovim/nvim-lspconfig/issues/3189
-							library = vim.tbl_extend("force", vim.api.nvim_get_runtime_file("", true), {
-								"${3rd}/luv/library",
-								"${3rd}/busted/library",
-							}),
-						},
-					})
-				end,
-				---@type lspconfig.settings.lua_ls
-				settings = {
-					Lua = {
-						format = { enable = false }, -- Disable formatting (formatting is done by stylua)
+				client.config.settings.Lua = vim.tbl_deep_extend("force", client.config.settings.Lua, {
+					runtime = {
+						version = "LuaJIT",
+						path = { "lua/?.lua", "lua/?/" },
 					},
+					workspace = {
+						checkThirdParty = false,
+						-- NOTE: this is a lot slower and will cause issues when working on your own configuration.
+						--  See https://github.com/neovim/nvim-lspconfig/issues/3189
+						library = vim.tbl_extend("force", vim.api.nvim_get_runtime_file("", true), {
+							"${3rd}/luv/library",
+							"${3rd}/busted/library",
+						}),
+					},
+				})
+			end,
+			---@type lspconfig.settings.lua_ls
+			settings = {
+				Lua = {
+					format = { enable = false }, -- Disable formatting (formatting is done by stylua)
 				},
 			},
-		}
+		},
+	}
 
 	vim.pack.add({
 		gh("neovim/nvim-lspconfig"),
@@ -798,8 +801,24 @@ do
 	-- other tools, you can run
 	--    :Mason
 	--
+	--  -- 1. 定义排除列表
+	local exclude_list = { "basedpyright", "pyright" } -- 示例：排除多个服务器
+
+	-- 2. 将排除列表转换为集合（Set），提高查找效率
+	local exclude_set = {}
+	for _, name in ipairs(exclude_list) do
+		exclude_set[name] = true
+	end
+
+	-- 3. 遍历 servers 表，排除指定键
+	local ensure_installed = {}
+	for server, _ in pairs(servers or {}) do
+		if not exclude_set[server] then
+			table.insert(ensure_installed, server)
+		end
+	end
+
 	-- You can press `g?` for help in this menu.
-	local ensure_installed = vim.tbl_keys(servers or {})
 	vim.list_extend(ensure_installed, {
 		-- You can add other tools here that you want Mason to install
 	})
@@ -873,7 +892,11 @@ do
 	-- require('luasnip.loaders.from_vscode').lazy_load()
 
 	-- [[ Autocomplete Engine ]]
-	vim.pack.add({ { src = gh("saghen/blink.cmp"), version = vim.version.range("1.*") } })
+	vim.pack.add({
+
+		{ src = gh("saghen/blink.cmp"), version = vim.version.range("2.*") },
+		{ src = gh("saghen/blink.lib"), version = vim.version.range("2.*") },
+	})
 	require("blink.cmp").setup({
 		keymap = {
 			-- 'default' (recommended) for mappings similar to built-in completions
